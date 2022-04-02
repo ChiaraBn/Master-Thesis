@@ -12,6 +12,7 @@ The usage of redundant RNS is analyzed by comparing the performances of the cryp
         ├── build
             ├── CMakeFiles
                ├── ...
+            ├── DemoData
             ├── cmake_install.cmake
             ├── CMakeCache.txt
             └── Makefile
