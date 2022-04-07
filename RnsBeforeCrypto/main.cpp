@@ -38,14 +38,15 @@ void setup () {
 
   cc->Enable(ENCRYPTION);
   cc->Enable(SHE);
-  cc->Enable(LEVELEDSHE);  
+  cc->Enable(LEVELEDSHE); 
 }
 
-Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, vector<int64_t> v1) {
+Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, vector<int64_t> v) {  
+  
   cc->EvalMultKeyGen(keyPair.secretKey);
   cc->EvalAtIndexKeyGen(keyPair.secretKey, {1, 2, -1, -2});
-  
-  Plaintext plain = cc->MakePackedPlaintext(v1);
+
+  Plaintext plain = cc->MakePackedPlaintext(v);
   auto cipher = cc->Encrypt(keyPair.publicKey, plain);
   cipher = cc->Compress(cipher, 2U);
 
@@ -53,8 +54,9 @@ Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, vector<int64_t> v1
 }
 
 void palisade (vector<int64_t> v1, vector<int64_t> v2) {
-  LPKeyPair<DCRTPoly> keyPair = cc->KeyGen();
-
+  
+  LPKeyPair<DCRTPoly> keyPair= cc->KeyGen();
+  
   auto c1 = makeCipher(keyPair, v1);
   auto c2 = makeCipher(keyPair, v2);
 
