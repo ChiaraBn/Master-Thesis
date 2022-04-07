@@ -2,7 +2,11 @@
 
 ## Overview
 This project aims to combine the advantages of **homomorphic encryption**, thus allowing secure data aggregation operations, with the use of **redundant RNS**, which provides robustness in an **MCS context**.<p>
-The usage of redundant RNS is analyzed by comparing the performances of the cryptographic schemes, where the RNS can be applied both before or after the scheme itself.<br>
+The **goal** of this study is to demonstrate that if the **aggregator** receives at least the number of **legitimate** residues, the overall arithmetic operations are still running.<br>
+Having **more** data than necessary prepared for sending, in case of architecture failures, means that there is the possibility to **recover** lost data.<p>
+
+
+The usage of **redundant RNS** is analyzed by comparing the performances of the cryptographic schemes, where the RNS can be applied both **before** or **after** the scheme itself.<br>
 
 Documentation [Rns Before Cryptography](https://github.com/ChiaraBn/Master-Thesis/tree/main/RnsBeforeCrypto/doc.md).<br>
 Documentation [Rns After Cryptography](https://github.com/ChiaraBn/Master-Thesis/tree/main/RnsAfterCrypto/doc.md).<br>
