@@ -19,29 +19,29 @@
 #include "helpers.h"
 using namespace lbcrypto;
 
-CryptoContext<DCRTPoly> cc;
-
 /**
  * @brief Create the cryptocontext
  * n = 65,536
  * p = plaintext Modulus
  * sigma - distribution parameter for error distribution
  */
-void setup () {
+CryptoContext<DCRTPoly> setup () {
   int plaintextModulus = 65537;
   double sigma = 3.2;
   SecurityLevel securityLevel = HEStd_128_classic;
   uint32_t depth = 2;
 
-  cc = CryptoContextFactory<DCRTPoly>::genCryptoContextBGVrns(
+  CryptoContext<DCRTPoly> cc = CryptoContextFactory<DCRTPoly>::genCryptoContextBGVrns(
           depth, plaintextModulus, securityLevel, sigma, depth, OPTIMIZED, BV);
 
   cc->Enable(ENCRYPTION);
   cc->Enable(SHE);
   cc->Enable(LEVELEDSHE); 
+  return cc;
 }
 
-Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, vector<int64_t> v) {  
+Ciphertext<DCRTPoly> makeCipher (CryptoContext<DCRTPoly> &cc, 
+                                LPKeyPair<DCRTPoly> keyPair, vector<int64_t> v) {  
   
   cc->EvalMultKeyGen(keyPair.secretKey);
   cc->EvalAtIndexKeyGen(keyPair.secretKey, {1, 2, -1, -2});
@@ -53,12 +53,12 @@ Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, vector<int64_t> v)
   return cipher;
 }
 
-void palisade (vector<int64_t> v1, vector<int64_t> v2) {
+void palisade (CryptoContext<DCRTPoly> &cc, vector<int64_t> v1, vector<int64_t> v2) {
   
   LPKeyPair<DCRTPoly> keyPair= cc->KeyGen();
   
-  auto c1 = makeCipher(keyPair, v1);
-  auto c2 = makeCipher(keyPair, v2);
+  auto c1 = makeCipher(cc, keyPair, v1);
+  auto c2 = makeCipher(cc, keyPair, v2);
 
   // Operations
   auto sum12 = cc->EvalAdd(c1, c2);
@@ -83,7 +83,7 @@ int64_t convertPlaintext (Plaintext p) {
   return values[0];
 }
 
-void fillCiphers (vector<int64_t> v, 
+void fillCiphers (CryptoContext<DCRTPoly> &cc, vector<int64_t> v, 
                   vector<Ciphertext<DCRTPoly>> &ciphers, LPKeyPair<DCRTPoly> keyPair) {
 
   vector<int64_t> tmp;
@@ -91,21 +91,22 @@ void fillCiphers (vector<int64_t> v,
 
   for (long unsigned int i = 0; i < v.size(); i++) {
     tmp.push_back(v[i]);
-    c = makeCipher(keyPair, tmp);
+    c = makeCipher(cc, keyPair, tmp);
     ciphers.push_back(c);
     tmp.clear();
   } 
 }
 
-void palisadeRNS (vector<int64_t> base, vector<int64_t> v1, vector<int64_t> v2) {
+void palisadeRNS (CryptoContext<DCRTPoly> &cc, vector<int64_t> base, 
+                  vector<int64_t> v1, vector<int64_t> v2) {
   LPKeyPair<DCRTPoly> keyPair = cc->KeyGen();
 
   vector<Ciphertext<DCRTPoly>> ciphers_v1;
   vector<Ciphertext<DCRTPoly>> ciphers_v2;
 
   // Encryption of each residue
-  fillCiphers(v1, ciphers_v1, keyPair);
-  fillCiphers(v2, ciphers_v2, keyPair);
+  fillCiphers(cc, v1, ciphers_v1, keyPair);
+  fillCiphers(cc, v2, ciphers_v2, keyPair);
 
   // Operations
   vector<Ciphertext<DCRTPoly>> cipherAdd, cipherMult;
@@ -143,25 +144,27 @@ void palisadeRNS (vector<int64_t> base, vector<int64_t> v1, vector<int64_t> v2) 
 }
 
 int main() {
-  setup();
 
   vector<int64_t> a1 = {28};
   vector<int64_t> a2 = {13};
 
   // Results without RNS
-  palisade (a1, a2);
+  CryptoContext<DCRTPoly> cc = setup();
+  if (cc) {
+    palisade (cc, a1, a2);
+  }
   
-  /* 
-   * Rappresentability up to: 9699690 
-   * 8 legitimate residues
-   */
-  vector<int64_t> base = chooseRNSBase(1, 20);
-
-  vector<int64_t> v1 = representRNS(28, base);
-  vector<int64_t> v2 = representRNS(13, base);
-
   // Results with RNS
-  palisadeRNS (base, v1, v2);
+  CryptoContext<DCRTPoly> cc2 = setup();
+  if (cc2) {
+    //Rappresentability up to: 9699690 - 8 legitimate residues
+    vector<int64_t> base = chooseRNSBase(1, 20);
+
+    vector<int64_t> v1 = representRNS(28, base);
+    vector<int64_t> v2 = representRNS(13, base);
+
+    palisadeRNS (cc2, base, v1, v2);
+  }
 
   return 0;
 }
