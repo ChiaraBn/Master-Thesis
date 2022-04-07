@@ -4,6 +4,9 @@
 This project aims to combine the advantages of **homomorphic encryption**, thus allowing secure data aggregation operations, with the use of **redundant RNS**, which provides robustness in an **MCS context**.<p>
 The usage of redundant RNS is analyzed by comparing the performances of the cryptographic schemes, where the RNS can be applied both before or after the scheme itself.<br>
 
+Documentation [Rns Before Cryptography](https://github.com/ChiaraBn/Master-Thesis/tree/main/RnsBeforeCrypto/doc.md).<br>
+Documentation [Rns After Cryptography](https://github.com/ChiaraBn/Master-Thesis/tree/main/RnsAfterCrypto/doc.md).<br>
+
 ## Project Directory
 
     ├── README.md
@@ -16,6 +19,7 @@ The usage of redundant RNS is analyzed by comparing the performances of the cryp
             ├── cmake_install.cmake
             ├── CMakeCache.txt
             └── Makefile
+        ├── doc.md
         ├── CMakeLists.txt
         ├── helpers.cpp
         ├── helpers.h
@@ -29,6 +33,7 @@ The usage of redundant RNS is analyzed by comparing the performances of the cryp
             ├── cmake_install.cmake
             ├── CMakeCache.txt
             └── Makefile
+        ├── doc.md
         ├── CMakeLists.txt
         ├── helpers.cpp
         ├── helpers.h
