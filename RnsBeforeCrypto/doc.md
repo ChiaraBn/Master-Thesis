@@ -6,6 +6,7 @@ The approach involves sampling an integer data from a sensor, then transforming 
 The choice of using the RNS is based on the fact that, in front of having the possibility to have **redundant residues**, more data than necessary are prepared for sending, so that in case of architecture failures, there is the possibility to **recover** lost data.<p>
 
 ## First draft
+<img src="../Imgs/cryptoScheme.png"><p>
 <img src="../Imgs/scheme1.png"><p>
 
 [PALISADE](https://palisade-crypto.org/) takes each residue and, in first action, trasforms them into a **polynomial Plaintext**, still representing the input text.<br>
