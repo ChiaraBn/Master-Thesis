@@ -215,16 +215,14 @@ vector<int> readBinFile (string filename) {
   ifstream file;
   vector<int> vec;
   
-  string data2;
-
-  file.open(filename, ios::binary);
+  file.open(filename,  ios::in | ios::binary);
   file.seekg(0, ios::end);
   size_t filesize = file.tellg();
   file.seekg(0, ios::beg);
 
   vec.resize(filesize/sizeof(int));
+  file.read(reinterpret_cast<char*>(vec.data()), filesize); 
 
-  file.read((char *)vec.data(), filesize);
   file.close();
 
   return vec;
@@ -243,7 +241,6 @@ void palisadeRNS (CryptoContext<DCRTPoly> &cc,
   vector<int> vec1 = readBinFile(DATAFOLDER+ciphertextName(1));
   vector<int> vec2 = readBinFile(DATAFOLDER+ciphertextName(2));
   cout << "size of a vector: " << vec1.size() << endl;
-
 }
 
 int main() {
