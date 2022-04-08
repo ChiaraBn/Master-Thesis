@@ -19,6 +19,7 @@ Cryptographic scheme used: **BGV**, due to the usage of int numbers.
 - Now there is just a **vector** of int64_t representing the **binary file**. It should be a **single** number, in order to encode it to the (R)RNS representation.<br>
 This vector has size of 33703 elements.<br>
 The serialized vector has size of 67406 elements.<p>
+- **Decryption** to test: having the int64_t number that represents the binary file -> trasform it to a **ciphertext** in order to decrypt it.
 
 
 ## TODO
