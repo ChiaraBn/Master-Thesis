@@ -71,9 +71,17 @@ $ Master-Thesis/RnsBeforeCrypto/build
 make clean
 ```
 
+## On the dataset
+It has been used the dataset [**GeoLife**](https://www.microsoft.com/en-us/download/details.aspx?id=52367), which stores a set of **GPS** **trajectories**.<br>
+A trajectory is represented by a sequence of time-stamped points, each of which contains the information of latitude, longitude and altitude. <br>
+This dataset contains **17,621 trajectories** with a total distance of about 1.2 million kilometers and a total duration of 48,000+ hours.<br>
+This collection contains data of **182 users** in a period of over three years (from April 2007 to August 2012).<p>
+
+For the purpose of the project, these trajectories are important in order to be able to do the **total sum** of distances, using homomorphic encryption.
+
 ## Keywords
 - Homomorphic encryption
 - Lattice cryptography
+- Data Aggregation
 - RRNS
 - MCS
-- Data Aggregation
