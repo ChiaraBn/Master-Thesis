@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wall -Werror -O3  -DPALISADE_VERSION=1.11.5 -Wno-parentheses -fopenmp -fopenmp CMakeFiles/run.dir/main.cpp.o CMakeFiles/run.dir/helpers.cpp.o -o run   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib /usr/local/lib/libPALISADEpke.so.1.11.5 /usr/local/lib/libPALISADEbinfhe.so.1.11.5 -fopenmp /usr/local/lib/libPALISADEcore.so.1.11.5 -fopenmp 

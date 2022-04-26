@@ -1,3 +1,0 @@
-/home/chiara/Scrivania/Master-Thesis/RnsAfterCrypto/build/CMakeFiles/rebuild_cache.dir
-/home/chiara/Scrivania/Master-Thesis/RnsAfterCrypto/build/CMakeFiles/edit_cache.dir
-/home/chiara/Scrivania/Master-Thesis/RnsAfterCrypto/build/CMakeFiles/run.dir
