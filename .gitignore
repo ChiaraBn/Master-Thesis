@@ -1,6 +1,9 @@
 .vscode
 
-RnsAfterCrypto/a.out
-RnsAfterCrypto/build/test.txt
+Int_Scheme/build/aggregatorData/*
+Int_Scheme/build/demoData/ciphertexts/*
+Int_Scheme/a.out
 
-RnsBeforeCrypto/a.out
+Real_Scheme/build/aggregatorData/*
+Real_Scheme/build/demoData/ciphertexts/*
+Real_Scheme/a.out
