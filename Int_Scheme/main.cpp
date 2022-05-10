@@ -17,6 +17,8 @@
 #include "pubkeylp-ser.h"
 #include "scheme/bgvrns/bgvrns-ser.h"
 
+#include <cereal/types/polymorphic.hpp>
+
 using namespace lbcrypto;
 
 // It takes the current directory
@@ -25,6 +27,13 @@ using namespace lbcrypto;
 
 const string DATAFOLDER = "demoData";
 const string DISTANCEINT = "../../Data/dataInt.txt";
+const string AGGREGATORDATA = "aggregatorData";
+
+/* Representability: 810162134158954261
+ * Prime numbers between 20 and 70: {23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67}
+ * Six redundant residues {71, 73, 79, 83, 89, 97}
+ */
+const vector<int> base = RNSBase(20, 80);
 
 template <typename T>
 bool serializeToFile (const std::string& filename, const T& obj, 
@@ -50,14 +59,16 @@ bool deserializeFromFile(const std::string& filename, T& obj,
 
 /**
  * @brief Create the cryptocontext
- * n = 65,536
  * p = plaintext Modulus
+ * depth = multiplicative depth (it changes the ciphertext size)
+ * m = 16384 cyclotomic order
  * sigma - distribution parameter for error distribution
  */
 CryptoContext<DCRTPoly> setup () {
-  int plaintextModulus = 65537;
+  // int plaintextModulus = 65537;
+  int plaintextModulus = 49153;
   double sigma = 3.2;
-  uint32_t depth = 2;
+  uint32_t depth = 1;
   SecurityLevel securityLevel = HEStd_128_classic;
 
   CryptoContext<DCRTPoly> cc;
@@ -157,8 +168,7 @@ Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, CryptoContext<DCRT
   return cipher;
 }
 
-void serverProcess (CryptoContext<DCRTPoly> &cc, 
-                    vector<vector<int64_t>> v) {
+void serverProcess(CryptoContext<DCRTPoly> &cc, int size, bool FLAGRNS) {
 
   cc->ClearEvalMultKeys();
   cc->ClearEvalAutomorphismKeys();
@@ -184,19 +194,30 @@ void serverProcess (CryptoContext<DCRTPoly> &cc,
   if (!deserializeKeys(cc_ser, DATAFOLDER+keyRotLocation, 2)) return;
 
   // CIPHERTEXTS DESERIALIZATION //
-  for (long unsigned int i = 0; i < v.size()-1; i+=2) {    
+  for (int i = 0; i < size-1; i+=2) { 
+
     Ciphertext<DCRTPoly> ct1, ct2;
-    if (!deserializeFromFile(DATAFOLDER + ciphertextName(i), ct1, SerType::BINARY)) {
-      return;
+    if (FLAGRNS) {
+      if (!deserializeFromFile(AGGREGATORDATA + aggregatorFileName(i), ct1, SerType::BINARY)) {
+        return;
+      }
+
+      if (!deserializeFromFile(AGGREGATORDATA + aggregatorFileName(i+1), ct2, SerType::BINARY)) {
+        return;
+      }
+    }
+    else {
+      if (!deserializeFromFile(DATAFOLDER + ciphertextName(i), ct1, SerType::BINARY)) {
+        return;
+      }
+
+      if (!deserializeFromFile(DATAFOLDER + ciphertextName(i+1), ct2, SerType::BINARY)) {
+        return;
+      }
     }
 
-    if (!deserializeFromFile(DATAFOLDER + ciphertextName(i+1), ct2, SerType::BINARY)) {
-      return;
-    }
-
-    auto sum  = cc_ser->EvalAdd(ct1, ct2);
-
-    // Final check for operations 
+    auto sum = cc_ser->EvalAdd(ct1, ct2);
+  
     Plaintext plainSum;
     cc_ser->Decrypt(sk, sum, &plainSum);
 
@@ -205,8 +226,8 @@ void serverProcess (CryptoContext<DCRTPoly> &cc,
   } 
 }
 
-// Reading the binary file into a  INT vector
-vector<int64_t> readCiphers (string filename) {
+// Reading the binary file into a  INT vectors
+vector<int> readCiphers (string filename) {
   ifstream file;
   
   file.open(filename,  ios::in | ios::binary);
@@ -214,53 +235,106 @@ vector<int64_t> readCiphers (string filename) {
   size_t filesize = file.tellg();
   file.seekg(0, ios::beg);
 
-  vector<int64_t> vec(filesize/sizeof(int64_t));
+  vector<int> vec(filesize/sizeof(int));
   file.read(reinterpret_cast<char*>(vec.data()), filesize); 
   file.close();
 
   return vec;
 }
 
-vector<vector<int64_t>> encoding (vector<vector<int64_t>> v) {
-  // Data to send
-  vector<vector<int64_t>> residues;
+void writeAggregation (vector<int64_t> v, string filename) {
+  ofstream file;
+  file.open(filename, fstream::out | ios::binary);
+  file.write((char*)&v[0], v.size() * sizeof(v));
+  file.close();
+}
 
-  // TODO prova su due cifrari -> espandere su tutti
-  auto v1 = readCiphers(ciphertextName(0));
-  auto v2 = readCiphers(ciphertextName(1));
+vector<vector<int64_t>> encoding (long unsigned int i) {
+
+  vector<vector<int64_t>> residues;
+  vector<int> v_ser = readCiphers(DATAFOLDER+ciphertextName(i));
 
   // RNS encoding
-  
+  for (long unsigned int i = 0; i < v_ser.size(); i++) {
+    vector<int64_t> ri = RNS(v_ser[i], base);
+    residues.push_back(ri);
+  }
 
   return residues;
 }
 
+vector<vector<int64_t>> decoding (map<int, vector<vector<int64_t>>> dataset) {
+  vector<vector<int64_t>> dataset_decoding;
+  vector<int64_t> chuck_decoding;
+
+  map<int, vector<vector<int64_t>>>::iterator it;
+  for (it = dataset.begin(); it != dataset.end(); it++) {
+    for (long unsigned int i = 0; i < it->second.size(); i++) {
+      int64_t tmp = CRT(base, it->second[i]);
+      chuck_decoding.push_back(tmp);
+    }
+    
+    dataset_decoding.push_back(chuck_decoding);
+    chuck_decoding.clear();
+  }
+  return dataset_decoding;
+}
+
 void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<int64_t>> v,
               bool FLAGRNS) {
-
+  
   LPKeyPair<DCRTPoly> keyPair = cc->KeyGen();
   if (!serializeKeys(keyPair, cc)) return;
 
-  // Creates and serializes the ciphers
-  for (long unsigned int i = 0; i < v.size()-1; i+=2) {
-    auto cipher1 = makeCipher(keyPair, cc, v[i], ciphertextName(i));
-    auto cipher2 = makeCipher(keyPair, cc, v[i+1], ciphertextName(i+1));
+  /* v[i] represents a chuck of the samplings */
+  for (long unsigned int i = 0; i < v.size(); i++) {
+    makeCipher(keyPair, cc, v[i], ciphertextName(i));
   }
 
   /* --- SENDING ---
    * If the RNS encoding is active,
-   * before sending the data must be reduced to its residues.
+   * before sending, the data must be reduced to its residues.
    */
-  if (FLAGRNS) {
-    vector<vector<int64_t>> residues = encoding (v);
-  }
+  if (FLAGRNS) { 
+    
+    map<int, vector<vector<int64_t>>> dataset;
+  
+    // ENCODING FOR SENDING // 
+    for (long unsigned int i = 0; i < v.size(); i++) {
+      vector<vector<int64_t>> residues = encoding (i);
+      dataset.insert(make_pair(i, residues));
+    }  
 
-  /* --- RECEVEING AGGREGATOR SIDE --- */
-  if (FLAGRNS) {
-    // decoding();
-  }
+    // DECODING FOR RECEVEING //
+    vector<vector<int64_t>> dec = decoding(dataset);
+    
+    vector<int> vser = readCiphers(DATAFOLDER+ciphertextName(0));
 
-  serverProcess(cc, v);
+    writeAggregation(dec[0], AGGREGATORDATA+aggregatorFileName(0));
+
+    Ciphertext<DCRTPoly> ct1;
+    if (!deserializeFromFile(AGGREGATORDATA+aggregatorFileName(0), ct1, SerType::BINARY)) {
+      return;
+    }
+
+    cout << ct1 << endl;
+  
+    // for (long unsigned int i = 0; i < dec.size(); i++) {
+    //   vector<int64_t> vser = readCiphers(DATAFOLDER+ciphertextName(i));
+    //   writeAggregation(dec[i], AGGREGATORDATA+aggregatorFileName(i));
+    //   writeAggregation(vser, AGGREGATORDATA+aggregatorFileName(i));
+    // }
+
+    // Ciphertext<DCRTPoly> ct1;
+    // if (!deserializeFromFile(AGGREGATORDATA+aggregatorFileName(0), ct1, SerType::BINARY)) {
+    //   return;
+    // }
+
+    //serverProcess(cc, dec.size(), FLAGRNS);
+  }
+  else {
+    serverProcess(cc, v.size(), FLAGRNS);
+  }  
 }
 
 vector<vector<int64_t>> readDataset () {
@@ -273,6 +347,7 @@ vector<vector<int64_t>> readDataset () {
   int64_t value;
   vector<int64_t> values;
 
+  // Reading 765041 distances
   if (file) {
     while ( file >> value ) {
       values.push_back(value);
@@ -281,10 +356,10 @@ vector<vector<int64_t>> readDataset () {
   file.close();
 
   // Splitting values into mulitple arrays
-  int bunch_size = 1000;
+  int64_t bunch_size = 1000;
   vector<vector<int64_t>> splits;
 
-  for(size_t i = 0; i < values.size(); i += bunch_size) {
+  for(size_t i = 0; i < values.size()/100; i += bunch_size) { //////
     auto last = min(values.size(), i + bunch_size);
     splits.emplace_back(values.begin() + i, values.begin() + last);
   }
@@ -293,13 +368,14 @@ vector<vector<int64_t>> readDataset () {
 }
 
 int main() {
+  ios_base::sync_with_stdio(0);
 
   // Flag that decides whether to activate RNS or not
-  bool FLAGRNS = false;
-  
+  bool FLAGRNS = true;
+
   vector<vector<int64_t>> values = readDataset();
-    
   CryptoContext<DCRTPoly> cc = setup(); 
+
   palisade (cc, values, FLAGRNS);
 
   return 0;

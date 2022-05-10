@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include <execution>
 using namespace std;
 
 const string cryptoLocation = "/cryptocontext.txt";
@@ -9,12 +10,14 @@ const string keyRotLocation = "/key-eval-rot.txt";
 
 string ciphertextName(int num);
 
+string aggregatorFileName(int num);
+
 void printVector (vector<int64_t> v);
 
-vector<int64_t> chooseRNSBase (int64_t low, int64_t high);
+vector<int> RNSBase (int low, int high);
 
-vector<int64_t> representRNS (int64_t n, vector<int64_t> base);
+vector<int64_t> RNS (int n, vector<int> base);
 
-int64_t convertRNS(vector<int64_t> base, vector<int64_t> rem);
+int inv(int a, int m);
 
-void reBase (vector<int64_t> &value, vector<int64_t> base);
+int64_t CRT(vector<int> base, vector<int64_t> rem);

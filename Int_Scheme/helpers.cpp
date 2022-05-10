@@ -12,6 +12,17 @@ string ciphertextName(int num) {
 }
 
 /**
+ * @brief Returns the aggregator file location for the serialization
+ * 
+ * @param num 
+ * @return string 
+ */
+string aggregatorFileName(int num) {
+  string name = "/file" + to_string(num) + ".txt";
+  return name;
+}
+
+/**
  * @brief Helper function to print the vector passed as parameter
  * 
  * @param v 
@@ -28,10 +39,9 @@ void printVector (vector<int64_t> v) {
  * 
  * @param low 
  * @param high 
- * @return vector<int64_t> 
  */
-vector<int64_t> chooseRNSBase (int64_t low, int64_t high) {
-  vector<int64_t> m;
+vector<int> RNSBase (int low, int high) {
+  vector<int> m;
   bool is_prime = true;
   int i = 0;
 
@@ -63,53 +73,67 @@ vector<int64_t> chooseRNSBase (int64_t low, int64_t high) {
  * 
  * @param n 
  * @param base 
- * @return * It 
+ * @return
  */
-vector<int64_t> representRNS (int64_t n, vector<int64_t> base) {
-  vector<int64_t> remainders;
+vector<int64_t> RNS (int n, vector<int> base) {
+  vector<int64_t> remainders(base.size());
 
-  for (long unsigned int k = 0; k < base.size(); k++) {
-    int64_t r = n % base[k];
-    remainders.push_back(r);
+  for (long unsigned int i = 0; i < base.size(); i++) {
+    remainders[i] = n % base[i];
   }
 
   return remainders;
 }
 
-/**
- * @brief Implements the Remainder Chinese Theoreom for the conversion
- * into the positional system
- * 
- * @param base 
- * @param rem 
- * @return int64_t 
- */
-int64_t convertRNS(vector<int64_t> base, vector<int64_t> rem) {
-    int64_t x = 1; 
-    
-    while (true) {
-      long unsigned int j;
-        for (j = 0; j < base.size(); j++ )
-            if (x % base[j] != rem[j])
-               break;
+int inv(int a, int m) {
+    int m0 = m, t, q;
+    int x0 = 0, x1 = 1;
  
-        if (j == base.size())
-            return x;
+    if (m == 1)
+        return 0;
  
-        x++;
+    // Apply extended Euclid Algorithm
+    while (a > 1) {
+        // q is quotient
+        q = a / m;
+ 
+        t = m;
+ 
+        // m is remainder now, process same as
+        // euclid's algo
+        m = a % m, a = t;
+ 
+        t = x0;
+ 
+        x0 = x1 - q * x0;
+ 
+        x1 = t;
     }
  
-    return x;
+    // Make x1 positive
+    if (x1 < 0)
+        x1 += m0;
+ 
+    return x1;
 }
+ 
+int64_t CRT(vector<int> base, vector<int64_t> rem) {
 
-/**
- * @brief It sets the vector of values into the modulo base
- * 
- * @param value 
- * @param base 
- */
-void reBase (vector<int64_t> &value, vector<int64_t> base) {
-  for (long unsigned int i = 0; i < base.size(); i++) {
-    value[i] = value[i] % base[i];
+  int k = sizeof(base) / sizeof(base[0]);
+
+  // Compute product of all numbers
+  int64_t prod = 1;
+  for (int i = 0; i < k; i++)
+      prod *= base[i];
+
+  // Initialize result
+  int64_t result = 0;
+
+  // Apply above formula
+  for (int i = 0; i < k; i++) {
+      int64_t pp = prod / base[i];
+      result += rem[i] * inv(pp, base[i]) * pp;
   }
+
+  return result % prod;
 }
