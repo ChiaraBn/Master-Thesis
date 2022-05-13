@@ -6,10 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/chiara/Scrivania/Master-Thesis/Int_Scheme/helpers.cpp
-helpers.h
-/home/chiara/Scrivania/Master-Thesis/Int_Scheme/helpers.h
-
 /home/chiara/Scrivania/Master-Thesis/Int_Scheme/helpers.h
 bits/stdc++.h
 -
@@ -29,8 +25,6 @@ pubkeylp-ser.h
 /home/chiara/Scrivania/Master-Thesis/Int_Scheme/pubkeylp-ser.h
 scheme/bgvrns/bgvrns-ser.h
 /home/chiara/Scrivania/Master-Thesis/Int_Scheme/scheme/bgvrns/bgvrns-ser.h
-cereal/types/polymorphic.hpp
--
 
 /usr/local/include/palisade/cereal/access.hpp
 type_traits
