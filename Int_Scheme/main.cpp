@@ -17,8 +17,6 @@
 #include "pubkeylp-ser.h"
 #include "scheme/bgvrns/bgvrns-ser.h"
 
-#include <cereal/types/polymorphic.hpp>
-
 using namespace lbcrypto;
 
 // It takes the current directory
