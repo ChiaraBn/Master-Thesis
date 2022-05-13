@@ -27,7 +27,7 @@ string aggregatorFileName(int num) {
  * 
  * @param v 
  */
-void printVector (vector<int64_t> v) {
+void printVector (vector<int> v) {
   for (long unsigned int i = 0; i < v.size(); i++) {
     cout<<v[i]<< " ";
   }
@@ -75,8 +75,8 @@ vector<int> RNSBase (int low, int high) {
  * @param base 
  * @return
  */
-vector<int64_t> RNS (int n, vector<int> base) {
-  vector<int64_t> remainders(base.size());
+vector<int> RNS (int n, vector<int> base) {
+  vector<int> remainders(base.size());
 
   for (long unsigned int i = 0; i < base.size(); i++) {
     remainders[i] = n % base[i];
@@ -117,21 +117,17 @@ int inv(int a, int m) {
     return x1;
 }
  
-int64_t CRT(vector<int> base, vector<int64_t> rem) {
+int CRT(vector<int> base, vector<int> rem) {
 
   int k = sizeof(base) / sizeof(base[0]);
 
-  // Compute product of all numbers
-  int64_t prod = 1;
+  int prod = 1;
   for (int i = 0; i < k; i++)
       prod *= base[i];
 
-  // Initialize result
-  int64_t result = 0;
-
-  // Apply above formula
+  int result = 0;
   for (int i = 0; i < k; i++) {
-      int64_t pp = prod / base[i];
+      int pp = prod / base[i];
       result += rem[i] * inv(pp, base[i]) * pp;
   }
 

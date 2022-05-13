@@ -12,12 +12,12 @@ string ciphertextName(int num);
 
 string aggregatorFileName(int num);
 
-void printVector (vector<int64_t> v);
+void printVector (vector<int> v);
 
 vector<int> RNSBase (int low, int high);
 
-vector<int64_t> RNS (int n, vector<int> base);
+vector<int> RNS (int n, vector<int> base);
 
 int inv(int a, int m);
 
-int64_t CRT(vector<int> base, vector<int64_t> rem);
+int CRT(vector<int> base, vector<int> rem);
