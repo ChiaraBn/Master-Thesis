@@ -5,8 +5,7 @@ This project aims to combine the advantages of **homomorphic encryption**, thus 
 The **goal** of this study is to demonstrate that if the **aggregator** receives at least the number of **legitimate** residues, the overall arithmetic operations are still running.<br>
 Having **more** data than necessary prepared for sending, in case of architecture failures, means that there is the possibility to **recover** lost data.<p>
 
-
-The use of **redundant RNS** is analyzed by comparing the performances of the cryptographic schemes, where the RNS can be applied **after** the scheme itself.<p>
+The use of **redundant RNS** is analyzed by comparing the performances of the cryptographic **schemes**, where the RNS can be applied **after** the scheme itself.<p>
 
 The experiments were performed on the [**GeoLife**](https://www.microsoft.com/en-us/download/details.aspx?id=52367) dataset, which has a set of geographical coordinates that have been pre-processed in order to calculate the **distance** between points.<br>
 Having the possibility to implement multiple encryption schemes, the **exact integer** arithmetic encryption scheme (BGV/BFV) is compared with the **approximate arithmetic** one (CKKS).
@@ -90,7 +89,7 @@ This dataset contains **17,621 trajectories** with a total distance of about 1.2
 This collection contains data of **182 users** in a period of over three years (from April 2007 to August 2012).<p>
 
 For the purpose of the project, these trajectories are important in order to be able to do the **total sum** of distances, using homomorphic encryption. <br>
-About **765041 distances** have been collected.
+About **765.041 distances** have been collected.
 
 To calculate the distance between GPS coordinates, using **Python**, it is necessary to use [**geopy**](https://geopy.readthedocs.io/en/stable/).<br>
 ```
@@ -105,7 +104,6 @@ In order to pre-process and elaborate the dataset, it has been used [**Pandas**]
 ```
 pip install pandas
 ```
-
 
 ## Keywords
 - Homomorphic encryption
