@@ -1,9 +1,10 @@
 .vscode
 
 Int_Scheme/build/aggregatorData/*
-Int_Scheme/build/demoData/ciphertexts/*
+Int_Scheme/build/demoData/ciphertexts/*.txt
 Int_Scheme/a.out
+Int_Scheme/build/test.txt
 
 Real_Scheme/build/aggregatorData/*
-Real_Scheme/build/demoData/ciphertexts/*
+Real_Scheme/build/demoData/ciphertexts/*.txt
 Real_Scheme/a.out
