@@ -314,7 +314,7 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<int64_t>> v,
   }  
 }
 
-vector<vector<int64_t>> readDataset (bool FLAG) {
+vector<vector<int64_t>> readDataset() {
   ifstream file;
   file.open(DISTANCEINT);
 
@@ -333,15 +333,12 @@ vector<vector<int64_t>> readDataset (bool FLAG) {
   file.close();
 
   // Splitting values into mulitple arrays
-  int64_t chunk_size = 1000;
+  int64_t chunk_size = 2000;
   vector<vector<int64_t>> splits;
 
-  long unsigned int index = values.size()/2;
-  if (FLAG) {
-    for(size_t i = 0; i < index; i += chunk_size) {
-      auto last = min(values.size(), i + chunk_size);
-      splits.emplace_back(values.begin() + i, values.begin() + last);
-    }
+  for(size_t i = 0; i < values.size(); i += chunk_size) {
+    auto last = min(values.size(), i + chunk_size);
+    splits.emplace_back(values.begin() + i, values.begin() + last);
   }
 
   return splits;
@@ -353,8 +350,8 @@ int main() {
   // Flag that decides whether to activate RNS or not
   bool FLAGRNS = true;
 
-  vector<vector<int64_t>> values = readDataset(true);
   CryptoContext<DCRTPoly> cc = setup(); 
+  vector<vector<int64_t>> values = readDataset();
 
   palisade (cc, values, FLAGRNS);
 

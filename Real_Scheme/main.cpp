@@ -334,11 +334,11 @@ vector<vector<double>> readDataset (bool FLAG) {
   file.close();
 
   // Splitting values into mulitple arrays
-  int bunch_size = 1000;
+  int bunch_size = 2000;
   vector<vector<double>> splits;
 
-  long unsigned int index = values.size()/2;
-  for(size_t i = 0; i < index; i += bunch_size) {
+  // long unsigned int index = values.size()/2;
+  for(size_t i = 0; i < values.size(); i += bunch_size) {
     auto last = min(values.size(), i + bunch_size);
     splits.emplace_back(values.begin() + i, values.begin() + last);
   }
