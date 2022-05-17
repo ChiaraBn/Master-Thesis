@@ -29,7 +29,8 @@ Documentation [Exact Int Arithmetic](https://github.com/ChiaraBn/Master-Thesis/t
         ├── build
             ├── CMakeFiles
                ├── ...
-            ├── DemoData
+            ├── demoData
+            ├── aggregatorData
             ├── cmake_install.cmake
             ├── CMakeCache.txt
             └── Makefile
@@ -44,7 +45,8 @@ Documentation [Exact Int Arithmetic](https://github.com/ChiaraBn/Master-Thesis/t
         ├── build
             ├── CMakeFiles
                ├── ...
-            ├── DemoData
+            ├── demoData
+            ├── aggregatorData
             ├── cmake_install.cmake
             ├── CMakeCache.txt
             └── Makefile
