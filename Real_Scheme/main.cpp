@@ -316,7 +316,7 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<double>> v,
   }
 }
 
-vector<vector<double>> readDataset (bool FLAG) {
+vector<vector<double>> readDataset () {
   ifstream file;
   file.open(DISTANCEFLOAT);
 
@@ -351,8 +351,9 @@ int main() {
 
   // Flag that decides whether to activate RNS or not
   bool FLAGRNS = true;
-  vector<vector<double>> values = readDataset(true);  
+
   CryptoContext<DCRTPoly> cc = setup(); 
+  vector<vector<double>> values = readDataset();  
 
   palisade (cc, values, FLAGRNS);
 
