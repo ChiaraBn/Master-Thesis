@@ -57,14 +57,13 @@ bool deserializeFromFile(const std::string& filename, T& obj,
 
 /**
  * @brief Create the cryptocontext
- * p = plaintext Modulus
+ * p = plaintext Modulus  //int plaintextModulus = 49153;
  * depth = multiplicative depth (it changes the ciphertext size)
  * m = 16384 cyclotomic order
  * sigma - distribution parameter for error distribution
  */
 CryptoContext<DCRTPoly> setup () {
-  // int plaintextModulus = 65537;
-  int plaintextModulus = 49153;
+  int plaintextModulus = 65537;
   double sigma = 3.2;
   uint32_t depth = 1;
   SecurityLevel securityLevel = HEStd_128_classic;
