@@ -5,10 +5,10 @@
 # The results will be in two files, respectively for the (int) distances and
 # (float) distances
 
-from  geopy.distance import distance
+from geopy.distance import distance
 import pandas as pd
 
-file = "./geolife_example.csv"
+file = "./geolife.csv"
 distance_int = "./dataInt.txt"
 distance_float = "./dataFloat.txt"
 
