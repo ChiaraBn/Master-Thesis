@@ -28,8 +28,8 @@ const string DISTANCEFLOAT = "../../Data/dataFloat.txt";
 const string AGGREGATORDATA = "aggregatorData";
 
 uint32_t multDepth = 1;
-uint32_t scaleFactorBits = 40;
-uint32_t batchSize = 32;
+uint32_t scaleFactorBits = 50;
+uint32_t batchSize = 8;
 SecurityLevel securityLevel = HEStd_128_classic;
 
 /* Representability: 7420738134810
