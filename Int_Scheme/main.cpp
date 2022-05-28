@@ -17,7 +17,20 @@
 #include "pubkeylp-ser.h"
 #include "scheme/bgvrns/bgvrns-ser.h"
 
+// timing
+#include <chrono>
+#include <time.h>
+
 using namespace lbcrypto;
+
+#define WALLTIME    false
+#define CPUTIME     false
+
+#define SENDING     false
+#define AGGREGATOR  false
+
+chrono::_V2::system_clock::time_point chronoBegin;
+clock_t start;
 
 // It takes the current directory
 // char buff[1024];
@@ -31,7 +44,39 @@ const string AGGREGATORDATA = "aggregatorData";
  * Prime numbers between 0 and 20: {2, 3, 5, 7, 11, 13, 17, 19}
  * Four redundant residues {23, 29, 31, 37}
  */
+// 0, 40 = 12 moduli
+// 0, 20 = 8 moduli
 const vector<int> base = RNSBase(0, 40);
+
+/**
+ * @brief Additional function in order to measure execution times, both
+ * wall and CPU time.
+ * 
+ * @param flag It decides whether it is the starting point (true), 
+ * or the ending point (false)
+ */
+void timing (bool flag) { 
+  if (WALLTIME) {
+    if (flag) {
+      chronoBegin = chrono::high_resolution_clock::now();
+    }
+    else {
+      auto end = chrono::high_resolution_clock::now();
+      auto elapsed = chrono::duration_cast<chrono::nanoseconds>(end - chronoBegin);
+      printf("Wall time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+    }
+  }
+
+  if (CPUTIME) {
+    if (flag) {
+      start = clock();
+    }
+    else {
+      double elapsed = double(clock() - start) /CLOCKS_PER_SEC;
+      printf("CPU time measured: %.3f seconds.\n", elapsed);
+    }
+  }
+}
 
 template <typename T>
 bool serializeToFile (const std::string& filename, const T& obj, 
@@ -215,11 +260,16 @@ void serverProcess(CryptoContext<DCRTPoly> &cc, int size, bool FLAGRNS) {
 
     auto sum = cc_ser->EvalAdd(ct1, ct2);
   
+    // Cloud Platform Side
     Plaintext plainSum;
     cc_ser->Decrypt(sk, sum, &plainSum);
 
     cout << "\n > Results Palisade\n" 
         << "Sum: " << plainSum << endl;
+  }
+
+  if (AGGREGATOR) {
+    timing (false);
   } 
 }
 
@@ -290,22 +340,28 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<int64_t>> v,
    * If the RNS encoding is active,
    * before sending, the data must be reduced to its residues.
    */
-  if (FLAGRNS) { 
-    
+  if (FLAGRNS) {   
     map<int, vector<vector<int>>> dataset;
   
     // ENCODING FOR SENDING // 
     for (long unsigned int i = 0; i < v.size(); i++) {
       vector<vector<int>> residues = encoding (i);
       dataset.insert(make_pair(i, residues));
-    }  
+    }
+    
+    if (SENDING) {
+      timing (false);
+    }
 
+    if (AGGREGATOR) {
+      timing (true);
+    }
     // DECODING FOR RECEVEING //
     vector<vector<uint8_t>> dec = decoding(dataset);
     for (long unsigned int i = 0; i < dec.size(); i++) {
       writeAggregation(dec[i], AGGREGATORDATA+aggregatorFileName(i));
     }
-    
+
     serverProcess(cc, dec.size(), FLAGRNS);
   }
   else {
@@ -314,6 +370,10 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<int64_t>> v,
 }
 
 vector<vector<int64_t>> readDataset() {
+  if (SENDING) {
+    timing (true);
+  }
+
   ifstream file;
   file.open(DISTANCEINT);
 
