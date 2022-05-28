@@ -17,7 +17,20 @@
 #include "pubkeylp-ser.h"
 #include "scheme/ckks/ckks-ser.h"
 
+// timing
+#include <chrono>
+#include <time.h>
+
 using namespace lbcrypto;
+
+#define WALLTIME    false
+#define CPUTIME     false
+
+#define SENDING     false
+#define AGGREGATOR  false
+
+chrono::_V2::system_clock::time_point chronoBegin;
+clock_t start;
 
 // It takes the current directory
 // char buff[1024];
@@ -37,6 +50,36 @@ SecurityLevel securityLevel = HEStd_128_classic;
  * Four redundant residues {23, 29, 31, 37}
  */
 const vector<int> base = RNSBase(0, 40);
+
+/**
+ * @brief Additional function in order to measure execution times, both
+ * wall and CPU time.
+ * 
+ * @param flag It decides whether it is the starting point (true), 
+ * or the ending point (false)
+ */
+void timing (bool flag) { 
+  if (WALLTIME) {
+    if (flag) {
+      chronoBegin = chrono::high_resolution_clock::now();
+    }
+    else {
+      auto end = chrono::high_resolution_clock::now();
+      auto elapsed = chrono::duration_cast<chrono::nanoseconds>(end - chronoBegin);
+      printf("Wall time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+    }
+  }
+
+  if (CPUTIME) {
+    if (flag) {
+      start = clock();
+    }
+    else {
+      double elapsed = double(clock() - start) /CLOCKS_PER_SEC;
+      printf("CPU time measured: %.3f seconds.\n", elapsed);
+    }
+  }
+}
 
 template <typename T>
 bool serializeToFile (const std::string& filename, const T& obj, 
@@ -216,13 +259,18 @@ void serverProcess(CryptoContext<DCRTPoly> &cc, int size, bool FLAGRNS) {
     }
 
     auto sum = cc_ser->EvalAdd(ct1, ct2);
-  
+
+    // Cloud Platform Side
     Plaintext plainSum;
     cc_ser->Decrypt(sk, sum, &plainSum);
     plainSum->SetLength(size);
 
     cout << "\n > Results Palisade\n" 
         << "Sum: " << plainSum << endl;
+  }
+
+  if (AGGREGATOR) {
+    timing (false);
   } 
 }
 
@@ -301,7 +349,15 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<double>> v,
     for (long unsigned int i = 0; i < v.size(); i++) {
       vector<vector<int>> residues = encoding (i);
       dataset.insert(make_pair(i, residues));
-    }  
+    }
+
+    if (SENDING) {
+      timing (false);
+    }
+
+    if (AGGREGATOR) {
+      timing (true);
+    }
 
     // DECODING FOR RECEVEING //
     vector<vector<uint8_t>> dec = decoding(dataset);
@@ -317,6 +373,10 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<double>> v,
 }
 
 vector<vector<double>> readDataset () {
+  if (SENDING) {
+    timing (true);
+  }
+
   ifstream file;
   file.open(DISTANCEFLOAT);
 
@@ -337,7 +397,6 @@ vector<vector<double>> readDataset () {
   int bunch_size = 2000;
   vector<vector<double>> splits;
 
-  // long unsigned int index = values.size()/2;
   for(size_t i = 0; i < values.size(); i += bunch_size) {
     auto last = min(values.size(), i + bunch_size);
     splits.emplace_back(values.begin() + i, values.begin() + last);
