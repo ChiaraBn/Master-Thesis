@@ -1,4 +1,4 @@
-# Master-Thesis
+# Data aggregation using Homomorphic Encryption in Mobile CrowdSensing context
 
 ## Overview
 This project aims to combine the advantages of **homomorphic encryption**, thus allowing secure data aggregation operations, with the use of **redundant RNS**, which provides robustness in an **MCS context**.<p>
