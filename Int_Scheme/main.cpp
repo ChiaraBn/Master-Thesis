@@ -1,7 +1,8 @@
 /**
  * @file main.cpp
  * @author Chiara Boni
- * @brief 
+ * @brief Application of the BGV exact integer arithmetic scheme, 
+ * using the PALISADE library, and subsequent redundant coding in RRNS.
  * @version 0.1
  * 
  * @copyright Copyright (c) 2022
@@ -23,11 +24,11 @@
 
 using namespace lbcrypto;
 
-#define WALLTIME    false
-#define CPUTIME     false
-
 #define SENDING     false
 #define AGGREGATOR  false
+
+#define WALLTIME    false
+#define CPUTIME     false
 
 chrono::_V2::system_clock::time_point chronoBegin;
 clock_t start;
@@ -46,6 +47,7 @@ const string AGGREGATORDATA = "aggregatorData";
  */
 // 0, 40 = 12 moduli
 // 0, 20 = 8 moduli
+// 0, 45 = 14 moduli
 const vector<int> base = RNSBase(0, 40);
 
 /**
@@ -78,6 +80,17 @@ void timing (bool flag) {
   }
 }
 
+/**
+ * @brief It allows the serialisation of an object of generic type T, 
+ * into a binary file
+ * 
+ * @tparam T 
+ * @param filename 
+ * @param obj 
+ * @param sertype 
+ * @return true If writing was successful
+ * @return false In case of error in writing
+ */
 template <typename T>
 bool serializeToFile (const std::string& filename, const T& obj, 
                       const SerType::SERBINARY& sertype) {
@@ -89,6 +102,17 @@ bool serializeToFile (const std::string& filename, const T& obj,
   return true;
 }
 
+/**
+ * @brief It allows the deserialisation of an object of generic type T, 
+ * from a binary file
+ * 
+ * @tparam T 
+ * @param filename 
+ * @param obj 
+ * @param sertype 
+ * @return true If reading was successful
+ * @return false 
+ */
 template <typename T>
 bool deserializeFromFile(const std::string& filename, T& obj, 
                         const SerType::SERBINARY& sertype) {
@@ -102,10 +126,13 @@ bool deserializeFromFile(const std::string& filename, T& obj,
 
 /**
  * @brief Create the cryptocontext
- * p = plaintext Modulus  //int plaintextModulus = 49153;
- * depth = multiplicative depth (it changes the ciphertext size)
- * m = 16384 cyclotomic order
- * sigma - distribution parameter for error distribution
+ *
+ * @param plaintext Modulus  //int plaintextModulus = 49153;
+ * @param depth = multiplicative depth (it changes the ciphertext size)
+ * m = 8192 cyclotomic order
+ * @param sigma - distribution parameter for error distribution
+ *
+ * @return CryptoContext<DCRTPoly> 
  */
 CryptoContext<DCRTPoly> setup () {
   int plaintextModulus = 65537;
@@ -115,7 +142,7 @@ CryptoContext<DCRTPoly> setup () {
 
   CryptoContext<DCRTPoly> cc;
   cc = CryptoContextFactory<DCRTPoly>::genCryptoContextBGVrns(
-          depth, plaintextModulus, securityLevel, sigma, depth, RLWE, BV);
+          depth, plaintextModulus, securityLevel, sigma, depth, OPTIMIZED, BV);
 
   cc->Enable(ENCRYPTION);
   cc->Enable(SHE);
@@ -125,6 +152,14 @@ CryptoContext<DCRTPoly> setup () {
   return cc;
 }
 
+/**
+ * @brief Taken a cryptocontext, serialises its keys to binary files
+ * 
+ * @param keyPair 
+ * @param cc 
+ * @return true If writing was successful
+ * @return false 
+ */
 bool serializeKeys (LPKeyPair<DCRTPoly> keyPair, CryptoContext<DCRTPoly> &cc) {
   if (!serializeToFile(DATAFOLDER + keyPubLocation,keyPair.publicKey, SerType::BINARY)) return false;
  
@@ -167,6 +202,15 @@ bool serializeKeys (LPKeyPair<DCRTPoly> keyPair, CryptoContext<DCRTPoly> &cc) {
   return true;
 }
 
+/**
+ * @brief Deserializes the cryptocontext's keys
+ * 
+ * @param cc 
+ * @param location 
+ * @param filter 
+ * @return true If reading was successful
+ * @return false 
+ */
 bool deserializeKeys (CryptoContext<DCRTPoly> &cc, string location,
                       int64_t filter) {
   ifstream keys(location, ios::in | ios::binary);
@@ -192,10 +236,20 @@ bool deserializeKeys (CryptoContext<DCRTPoly> &cc, string location,
   return true;
 }
 
+/**
+ * @brief Taken the input vector, it creates first the plaintext and then
+ * it proceeds to encrypt it.
+ * 
+ * @param keyPair 
+ * @param cc 
+ * @param v 
+ * @param filename 
+ * @return Ciphertext<DCRTPoly> 
+ */
 Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, CryptoContext<DCRTPoly> &cc,
                                 vector<int64_t> v, string filename) {
   
-  Plaintext plain = cc->MakePackedPlaintext(v);
+  Plaintext plain = cc->MakeCoefPackedPlaintext(v);
   auto cipher = cc->Encrypt(keyPair.publicKey, plain);
 
   /* Reduces the size of ciphertext modulus to minimize the
@@ -210,6 +264,14 @@ Ciphertext<DCRTPoly> makeCipher (LPKeyPair<DCRTPoly> keyPair, CryptoContext<DCRT
   return cipher;
 }
 
+/**
+ * @brief Aggregator and server simulation: it deseralises the keys and cryptocontext, 
+ * then it proceeds to sum between ciphers.
+ * 
+ * @param cc 
+ * @param size 
+ * @param FLAGRNS 
+ */
 void serverProcess(CryptoContext<DCRTPoly> &cc, int size, bool FLAGRNS) {
 
   cc->ClearEvalMultKeys();
@@ -273,7 +335,12 @@ void serverProcess(CryptoContext<DCRTPoly> &cc, int size, bool FLAGRNS) {
   } 
 }
 
-// Reading the binary file into a INT vectors
+/**
+ * @brief Reading the binary file into a INT vectors
+ * 
+ * @param filename 
+ * @return vector<uint8_t> 
+ */
 vector<uint8_t> readCiphers (string filename) {
   ifstream file;
   
@@ -289,12 +356,26 @@ vector<uint8_t> readCiphers (string filename) {
   return vec;
 }
 
+/**
+ * @brief It writes a vector of char into a binary file
+ * 
+ * @param v 
+ * @param filename 
+ */
 void writeAggregation (vector<uint8_t> v, string filename) {
   ofstream fout(filename, ios::out | ios::binary);
   fout.write((char*)&v[0], v.size() * sizeof(uint8_t));
   fout.close();
 }
 
+/**
+ * @brief RRNS encoding procedure. It transforms the contents of 
+ * the cipher files into 8-bit int, then proceeds to encode 
+ * each of these integers.
+ * 
+ * @param i 
+ * @return vector<vector<int>> 
+ */
 vector<vector<int>> encoding (long unsigned int i) {
   vector<vector<int>> residues;
   vector<uint8_t> vplain = readCiphers(DATAFOLDER+ciphertextName(i));
@@ -308,6 +389,13 @@ vector<vector<int>> encoding (long unsigned int i) {
   return residues;
 }
 
+/**
+ * @brief RRNS decoding procedure; it returns a int vector representing
+ * a single integer representation of a cipher.
+ * 
+ * @param dataset 
+ * @return vector<vector<uint8_t>> 
+ */
 vector<vector<uint8_t>> decoding (map<int, vector<vector<int>>> dataset) {
   vector<vector<uint8_t>> dataset_decoding;
   vector<uint8_t> chuck_decoding;
@@ -325,13 +413,20 @@ vector<vector<uint8_t>> decoding (map<int, vector<vector<int>>> dataset) {
   return dataset_decoding;
 }
 
+/**
+ * @brief It applies palisade encryption to incoming data
+ * 
+ * @param cc 
+ * @param v 
+ * @param FLAGRNS It indicates whether or not apply the RRNS encoding
+ */
 void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<int64_t>> v,
               bool FLAGRNS) {
   
   LPKeyPair<DCRTPoly> keyPair = cc->KeyGen();
   if (!serializeKeys(keyPair, cc)) return;
 
-  /* v[i] represents a chuck of the samplings */
+  // Creates and serializes the ciphers
   for (long unsigned int i = 0; i < v.size(); i++) {
     makeCipher(keyPair, cc, v[i], ciphertextName(i));
   }
@@ -369,6 +464,11 @@ void palisade (CryptoContext<DCRTPoly> &cc, vector<vector<int64_t>> v,
   }  
 }
 
+/**
+ * @brief It reads distances from the text file
+ * 
+ * @return vector<vector<int64_t>> 
+ */
 vector<vector<int64_t>> readDataset() {
   if (SENDING) {
     timing (true);
@@ -380,7 +480,7 @@ vector<vector<int64_t>> readDataset() {
   file.seekg(0, ios::end);
   file.seekg(0, ios::beg);
 
-  int64_t value;
+  int value;
   vector<int64_t> values;
 
   // Reading 765041 distances
@@ -392,7 +492,7 @@ vector<vector<int64_t>> readDataset() {
   file.close();
 
   // Splitting values into mulitple arrays
-  int64_t chunk_size = 2000;
+  int chunk_size = 5000;
   vector<vector<int64_t>> splits;
 
   for(size_t i = 0; i < values.size(); i += chunk_size) {
