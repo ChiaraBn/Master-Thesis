@@ -67,7 +67,7 @@ void timing (bool flag) {
     else {
       auto end = chrono::high_resolution_clock::now();
       auto elapsed = chrono::duration_cast<chrono::nanoseconds>(end - chronoBegin);
-      printf("Wall time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
+      printf("%.3f\n", elapsed.count() * 1e-9);
     }
   }
 
@@ -77,7 +77,7 @@ void timing (bool flag) {
     }
     else {
       double elapsed = double(clock() - start) /CLOCKS_PER_SEC;
-      printf("CPU time measured: %.3f seconds.\n", elapsed);
+      printf("%.3f\n", elapsed);
     }
   }
 }
